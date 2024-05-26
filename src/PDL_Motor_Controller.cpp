@@ -1,4 +1,4 @@
-#include "motor_controller.h"
+#include "PDL_Motor_Controller.h"
 
 MotorController::MotorController(MotorDriver &motor, HwRotaryEncoder &encoder)
     : motor(motor), encoder(encoder) {}
@@ -39,10 +39,40 @@ void MotorController::setTargetPosition(int32_t target_position)
     onMotorStallCalled = false;
 }
 
+void MotorController::setPositionTolerance(uint32_t position_tolerance)
+{
+    this->position_tolerance = position_tolerance;
+}
+
+void MotorController::setStallThreshold(uint32_t stall_threshold_ms)
+{
+    this->stall_threshold_ms = stall_threshold_ms;
+}
+
+int32_t MotorController::getCurrentPosition() const
+{
+    return current_position;
+}
+
 void MotorController::setCurrentPosition(int32_t current_position)
 {
     encoder.writeAbs(current_position);
     this->current_position = current_position;
+}
+
+float MotorController::getCurrentSpeed() const
+{
+    return current_speed;
+}
+
+bool MotorController::isMotorStalled() const
+{
+    return motor_stalled;
+}
+
+bool MotorController::isTargetReached() const
+{
+    return target_reached;
 }
 
 void MotorController::setGain(float Kp, float Ki, float Kd)
@@ -50,6 +80,16 @@ void MotorController::setGain(float Kp, float Ki, float Kd)
     this->Kp = Kp;
     this->Ki = Ki;
     this->Kd = Kd;
+}
+
+void MotorController::setLoopDelay(uint32_t loop_delay_ms)
+{
+    xFrequency = pdMS_TO_TICKS(loop_delay_ms);
+}
+
+void MotorController::setDebug(uint8_t debug)
+{
+    debug_option = debug;
 }
 
 void MotorController::setPwm(float control_signal)
