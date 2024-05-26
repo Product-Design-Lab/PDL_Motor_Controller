@@ -38,7 +38,6 @@
  
  ```cpp
  #include <PDL_Motor_Controller.h>
- #include <MotorController.h>
  ```
  
  ### Creating an Instance
