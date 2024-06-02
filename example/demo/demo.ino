@@ -39,7 +39,7 @@ void setup()
     motor_controller.setPositionLimits(20000, -20000);
     motor_controller.setGain(0.005);
     motor_controller.setDebug(MotorController::DEBUG_OFF);
-    motor_controller.setLoopDelay(50);
+    motor_controller.setLoopDelay(20);
     motor_controller.setOnTargetReach(posReachedCallback);
     motor_controller.setOnMotorStall(motorStalledCallback);
     motor_controller.start();
@@ -50,18 +50,26 @@ void loop()
     // Check for serial input and set the target position
     if (Serial.available())
     {
-        int targetPosition = Serial.parseInt();
-        if (Serial.read() == '\n')
-        { // Ensure the command is complete
-            motor_controller.setTargetPosition(targetPosition);
-            Serial.print("New target position set: ");
-            Serial.println(targetPosition);
+        char command = Serial.read();
+        int target = Serial.parseInt();
+        while (Serial.available())
+            Serial.read(); // Clear the buffer
+
+        Serial.printf("Command: %c, Target: %d\n", command, target);
+        if (command == 'P' || command == 'p')
+        {
+            motor_controller.setTargetPosition(target);
+            Serial.printf("Setting target position to %d\n", target);
+        }
+        else if (command == 'T' || command == 't')
+        {
+            float target_pwm = 0.001 * target;
+            motor_controller.setPwm(target_pwm);
+            Serial.printf("Setting PWM to %f\n", target_pwm);
         }
         else
         {
-            Serial.println("Invalid input. Please enter a valid integer.");
-            while (Serial.available())
-                Serial.read(); // Clear the buffer
+            Serial.println("Invalid command");
         }
     }
 
