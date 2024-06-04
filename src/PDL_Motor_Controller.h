@@ -25,11 +25,10 @@ private:
 
     uint32_t position_tolerance = 100; // position within this range is considered reached
     bool target_reached = false;
-    bool onTargetReachCalled = false;
 
     uint32_t stall_threshold_ms = 500; // in ms
+    float stall_threshold_dutycycle = 0.6; // in pwm
     bool motor_stalled = false;
-    bool onMotorStallCalled = false;
 
     float current_speed = 0;
     float Kp = 0, Ki = 0, Kd = 0;
@@ -61,7 +60,7 @@ public:
     void setTargetPosition(int32_t target_position);
     void setPositionTolerance(uint32_t position_tolerance);
 
-    void setStallThreshold(uint32_t stall_threshold_ms);
+    void setStallThreshold(uint32_t stall_threshold_ms, float stall_threshold_dutycycle = 0.6);
 
     int32_t getCurrentPosition() const;
     void setCurrentPosition(int32_t current_position);

@@ -34,9 +34,6 @@ void MotorController::setTargetPosition(int32_t target_position)
         this->target_position = target_position;
     }
     control_mode = CONTROL_POSITION;
-
-    onTargetReachCalled = false;
-    onMotorStallCalled = false;
 }
 
 void MotorController::setPositionTolerance(uint32_t position_tolerance)
@@ -44,9 +41,10 @@ void MotorController::setPositionTolerance(uint32_t position_tolerance)
     this->position_tolerance = position_tolerance;
 }
 
-void MotorController::setStallThreshold(uint32_t stall_threshold_ms)
+void MotorController::setStallThreshold(uint32_t stall_threshold_ms, float stall_threshold_dutycycle)
 {
     this->stall_threshold_ms = stall_threshold_ms;
+    this->stall_threshold_dutycycle = stall_threshold_dutycycle;
 }
 
 int32_t MotorController::getCurrentPosition() const
@@ -96,8 +94,6 @@ void MotorController::setPwm(float control_signal)
 {
     this->control_signal = control_signal;
     control_mode = CONTROL_PWM;
-    onTargetReachCalled = false;
-    onMotorStallCalled = false;
 }
 
 void MotorController::printDebug() const
@@ -148,28 +144,49 @@ void MotorController::motorTaskWrapper(void *parameter)
 void MotorController::checkMotorStall()
 {
     static uint32_t stall_start_tick = 0;
+    static bool stall_flag = false; // flag to prevent multiple stall events
 
-    if (target_reached || current_speed != 0 || control_signal == 0)
+    if (current_speed == 0 && control_signal > stall_threshold_dutycycle)
+    {
+        if (stall_start_tick == 0)
+        {
+            stall_start_tick = millis();
+        }
+        else if (millis() - stall_start_tick > stall_threshold_ms)
+        {
+            motor_stalled = true;
+            if (!stall_flag && onMotorStall)
+            {
+                onMotorStall();
+                stall_flag = true;
+            }
+        }
+    }
+    else
     {
         motor_stalled = false;
         stall_start_tick = 0;
-        return;
-    }
-
-    if (stall_start_tick == 0)
-    {
-        stall_start_tick = millis();
-    }
-
-    if (millis() - stall_start_tick > stall_threshold_ms)
-    {
-        motor_stalled = true;
+        stall_flag = false;
     }
 }
 
 void MotorController::checkTargetReach()
 {
-    target_reached = abs(target_position - current_position) < position_tolerance;
+    static bool target_reached_flag = false;
+    if (abs(target_position - current_position) < position_tolerance)
+    {
+        target_reached = true;
+        if (!target_reached_flag && onTargetReach != NULL)
+        {
+            onTargetReach();
+            target_reached_flag = true;
+        }
+    }
+    else
+    {
+        target_reached = false;
+        target_reached_flag = false;
+    }
 }
 
 void MotorController::pidPositionControl()
@@ -207,22 +224,10 @@ void MotorController::motorTask()
         else if (control_mode == CONTROL_POSITION)
         {
             pidPositionControl();
+            checkTargetReach();
         }
 
-        checkTargetReach();
         checkMotorStall();
-
-        if (target_reached && onTargetReach && !onTargetReachCalled)
-        {
-            onTargetReachCalled = true;
-            onTargetReach();
-        }
-
-        if (motor_stalled && onMotorStall && !onMotorStallCalled)
-        {
-            onMotorStallCalled = true;
-            onMotorStall();
-        }
 
         printDebug();
         vTaskDelayUntil(&xLastWakeTime, xFrequency);

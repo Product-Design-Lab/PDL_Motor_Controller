@@ -42,6 +42,7 @@ void setup()
     motor_controller.setLoopDelay(20);
     motor_controller.setOnTargetReach(posReachedCallback);
     motor_controller.setOnMotorStall(motorStalledCallback);
+    motor_controller.setStallThreshold(100, 0.5);
     motor_controller.start();
 }
 
