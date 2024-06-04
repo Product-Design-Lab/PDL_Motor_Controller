@@ -206,6 +206,25 @@ void MotorController::pidPositionControl()
     control_signal = Kp * error + Ki * error_integral + Kd * error_derivative;
     control_signal = fmin(fmax(control_signal, -1), 1); // normalize control_signal to [-1,1]
 
+    static float prev_control_signal = 0;
+
+    // Calculate the change in control signal
+    float delta_control_signal = control_signal - prev_control_signal;
+    constexpr float RATE_LIM = 0.1;
+
+    // Check if the control signal is accelerating (increasing in magnitude)
+    if (control_signal >= 0.9 && delta_control_signal > RATE_LIM)
+    {
+        control_signal = prev_control_signal + RATE_LIM;
+    }
+    else if (control_signal <= -0.9 && delta_control_signal < -RATE_LIM)
+    {
+        control_signal = prev_control_signal - RATE_LIM;
+    }
+
+    // Update the previous control signal
+    prev_control_signal = control_signal;
+
     motor.runMotor(control_signal);
 }
 
