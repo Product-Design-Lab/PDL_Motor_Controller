@@ -68,9 +68,17 @@ void loop()
             motor_controller.setPwm(target_pwm);
             Serial.printf("Setting PWM to %f\n", target_pwm);
         }
+        else if(command == 's')
+        {
+            motor_controller.start();
+        }
+        else if (command == 'a')
+        {
+            motor_controller.pause();
+        }
         else
         {
-            Serial.println("Invalid command");
+            Serial.printf("Invalid command: %c\n", command);
         }
     }
 

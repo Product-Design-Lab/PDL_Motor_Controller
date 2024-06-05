@@ -3,7 +3,14 @@
 MotorController::MotorController(MotorDriver &motor, HwRotaryEncoder &encoder)
     : motor(motor), encoder(encoder) {}
 
-MotorController::~MotorController() {}
+MotorController::~MotorController()
+{
+    eTaskState task_state = eTaskGetState(motorTaskHandle);
+    if (motorTaskHandle != NULL && task_state != eInvalid && task_state != eDeleted)
+    {
+        vTaskDelete(motorTaskHandle);
+    }
+}
 
 void MotorController::setPositionLimits(int32_t max_pos, int32_t min_pos)
 {
@@ -260,15 +267,26 @@ void MotorController::motorTask()
 
 void MotorController::start(uint8_t priority)
 {
-    xTaskCreate(motorTaskWrapper, "motorTask", 2048, this, priority, &motorTaskHandle);
+    eTaskState task_state = eTaskGetState(motorTaskHandle);
+    // Serial.printf("start: task_state: %d\n", task_state);
+    if (motorTaskHandle == NULL || task_state == eInvalid || task_state == eDeleted)
+    {
+        xTaskCreate(motorTaskWrapper, "motorTask", 2048, this, priority, &motorTaskHandle);
+    }
+    else if (task_state == eSuspended)
+    {
+        vTaskResume(motorTaskHandle);
+    }
 }
 
 void MotorController::pause()
 {
-    if (motorTaskHandle != NULL)
+    eTaskState task_state = eTaskGetState(motorTaskHandle);
+    // Serial.printf("pause: task_state: %d\n", task_state);
+    if (motorTaskHandle != NULL && task_state != eInvalid && task_state != eDeleted && task_state != eSuspended)
     {
-        vTaskDelete(motorTaskHandle);
-        motorTaskHandle = NULL;
+        motor.runMotor(0);
+        vTaskSuspend(motorTaskHandle);
     }
 }
 
