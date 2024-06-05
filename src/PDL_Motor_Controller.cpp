@@ -145,18 +145,22 @@ void MotorController::checkMotorStall()
 {
     static uint32_t stall_start_tick = 0;
     static bool stall_flag = false; // flag to prevent multiple stall events
-
-    if (current_speed == 0 && control_signal > stall_threshold_dutycycle)
+    // Serial.printf("current_speed: %f, control_signal: %f, stall_threshold_dutycycle: %f\n", current_speed, fabs(control_signal), stall_threshold_dutycycle);
+    if ((current_speed == 0) && (fabs(control_signal) > stall_threshold_dutycycle))
     {
+        // Serial.println("stall");
         if (stall_start_tick == 0)
         {
             stall_start_tick = millis();
+            // Serial.println("stall detected");
         }
         else if (millis() - stall_start_tick > stall_threshold_ms)
         {
             motor_stalled = true;
+            // Serial.println("stall registered");
             if (!stall_flag && onMotorStall)
             {
+                // Serial.println("stall event");
                 onMotorStall();
                 stall_flag = true;
             }
@@ -167,6 +171,7 @@ void MotorController::checkMotorStall()
         motor_stalled = false;
         stall_start_tick = 0;
         stall_flag = false;
+        // Serial.println("no stall");
     }
 }
 
