@@ -222,7 +222,7 @@ void MotorController::pidPositionControl()
 
     // Calculate the change in control signal
     float delta_control_signal = control_signal - prev_control_signal;
-    constexpr float RATE_LIM = 0.1;
+    constexpr float RATE_LIM = 0.6;
 
     // Check if the control signal is accelerating (increasing in magnitude)
     if (control_signal >= 0.9 && delta_control_signal > RATE_LIM)
