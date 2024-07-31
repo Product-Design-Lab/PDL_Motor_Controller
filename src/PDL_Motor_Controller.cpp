@@ -274,6 +274,8 @@ void MotorController::pidPositionControl()
         }
     }
 
+    control_signal = u;
+
     // Update the previous control signal
     prev_control_signal = control_signal;
 
