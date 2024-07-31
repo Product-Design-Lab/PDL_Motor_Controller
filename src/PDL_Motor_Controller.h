@@ -27,12 +27,13 @@ private:
     bool target_reached = false;
 
     uint32_t stall_threshold_ms = 500; // in ms
-    float stall_threshold_dutycycle = 0.6; // in pwm
+    float stall_threshold_dutycycle = 0.6; // in pwm, need to ensure Kp * position_torlerance < stall_threshold_dutycycle
     bool motor_stalled = false;
 
-    float current_speed = 0;
+    int32_t max_speed = 0;
+    int32_t current_speed = 0;
     float Kp = 0, Ki = 0, Kd = 0;
-    float error = 0, error_integral = 0, error_derivative = 0;
+    float error_pos = 0, error_integral = 0, error_derivative = 0;
     float control_signal = 0;
     TickType_t xFrequency = 10; // loop delay in Ticks, note that 1 Tick is not always 1 ms, refer to FreeRTOSconfig.h
     uint8_t debug_option = 0;
@@ -56,15 +57,15 @@ public:
     MotorController(MotorDriver &motor, HwRotaryEncoder &encoder);
     ~MotorController();
 
+    void setMaxSpeed(int32_t max_speed);
     void setPositionLimits(int32_t max_pos, int32_t min_pos); // encoder count value
     void setTargetPosition(int32_t target_position);
     void setPositionTolerance(uint32_t position_tolerance);
-
     void setStallThreshold(uint32_t stall_threshold_ms, float stall_threshold_dutycycle = 0.6);
 
     int32_t getCurrentPosition() const;
     void setCurrentPosition(int32_t current_position);
-    float getCurrentSpeed() const;
+    int32_t getCurrentSpeed() const;
     bool isMotorStalled() const;
     bool isTargetReached() const;
 

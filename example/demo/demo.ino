@@ -1,5 +1,5 @@
-#include <Arduino.h>
 #include "PDL_Motor_Controller.h"
+#include <Arduino.h>
 
 MotorDriver mp6550;
 HwRotaryEncoder encoder;
@@ -53,12 +53,20 @@ void loop()
     {
         char command = Serial.read();
         int target = Serial.parseInt();
+        int max_speed = Serial.parseInt();
         while (Serial.available())
             Serial.read(); // Clear the buffer
 
-        Serial.printf("Command: %c, Target: %d\n", command, target);
+        if (max_speed <= 0)
+        {
+            Serial.printf("Invalid max_speed: %d, setting to 100\n", max_speed);
+            max_speed = 100;
+        }
+
+        Serial.printf("Command: %c, Target: %d, max_speed: %d\n", command, target, max_speed);
         if (command == 'P' || command == 'p')
         {
+            motor_controller.setMaxSpeed(max_speed);
             motor_controller.setTargetPosition(target);
             Serial.printf("Setting target position to %d\n", target);
         }
@@ -68,7 +76,7 @@ void loop()
             motor_controller.setPwm(target_pwm);
             Serial.printf("Setting PWM to %f\n", target_pwm);
         }
-        else if(command == 's')
+        else if (command == 's')
         {
             motor_controller.start();
         }

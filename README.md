@@ -68,7 +68,7 @@
  - `void setStallThreshold(uint32_t stall_threshold_ms)`: Set the stall threshold in milliseconds.
  - `int32_t getCurrentPosition() const`: Get the current position.
  - `void setCurrentPosition(int32_t current_position)`: Set the current position.
- - `float getCurrentSpeed() const`: Get the current speed.
+ - `int32_t getCurrentSpeed() const`: Get the current speed.
  - `bool isMotorStalled() const`: Check if the motor is stalled.
  - `bool isTargetReached() const`: Check if the target position is reached.
  - `void setPwm(float control_signal)`: Set the PWM control signal.
